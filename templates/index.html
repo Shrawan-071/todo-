@@ -5,86 +5,84 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>To-Do App</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  
 </head>
+
 <body>
 
-  <nav>
-    <h1>To-Do App</h1>
-    <div>
-      <a href="#">Home</a>
-      <a href="#">About</a>
-      <a href="#">Contact</a>
-    </div>
-  </nav>
-  <div class="container">
-   <form class="to-do" action="/" method="POST">
-  <div class="form-group">
-    <label for="title">Title:</label>
-    <input type="text" name="task" placeholder="Enter a new to-do..." required />
+<nav>
+  <h1>To-Do App</h1>
+  <div>
+    <a href="#">Home</a>
+    <a href="#">About</a>
+    <a href="#">Contact</a>
   </div>
-  <div class="form-group">
-    <label for="description">Description:</label>
-    <input type="text" name="description" placeholder="Enter a description..." required />
-  </div>
-  <button type="submit" class="add-btn">Add</button>
-</form>
-    <table>
-      <thead>
-        <tr>
-            <th>sno</th>
-          <th>Task</th>
-          <th>description</th>
-          <th>Status</th>
-          <th>Date_Time</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
- {% if showing|length == 0 %}   
-        <tr>
-           <td>1</td>
-  <td>Example Task 1</td>
-  <td>This is a description of the task.</td>
-  <td><span class="status done">Done</span></td>
-  <td>2023-10-01 12:00:00</td>
-<td>
-    <a href="#" class="action-btn update-btn">Update</a>
-    <a href="#" class="action-btn delete-btn">Delete</a>
-  </td>
-</tr>
-<tr>
-  <td>2</td>
-  <td>Example Task 2</td>
-  <td>This is another description of the task.</td>
-  <td><span class="status not-done">pending</span></td>
-  <td>2023-10-02 14:30:00</td>
-  <td>
-      <a href="#" class="action-btn update-btn">Update</a>
-      <a href="#" class="action-btn delete-btn">Delete</a>
-  </td>
-</tr>
-{% endif %}
-  {% for todo in showing %}
-  <tr>
-  <td>{{ loop.index }}</td>
-  <td>{{ todo.task }}</td>
-  <td>{{ todo.description }}</td>
-  <td>
-  <span class="status {% if todo.status == 'Done' %}done{% else %}pending{% endif %}">
-    {{ todo.status }}
-  </span>
-</td>
+</nav>
 
-  <td>{{ todo.date_time }}</td>
-  <td>
-    <a href="/update/{{ todo.sno }}" class="action-btn update-btn">Update</a>
-<a href="/delete/{{ todo.sno }}" class="action-btn delete-btn">Delete</a>
-  </td>
-</tr>
-{% endfor %}
-      </tbody>
-    </table>
-  </div>
+<div class="container">
+
+  <!-- FORM -->
+  <form class="to-do" action="/" method="POST">
+    <div class="form-group">
+      <label>Title:</label>
+      <input type="text" name="task" placeholder="Enter a new to-do..." required />
+    </div>
+
+    <div class="form-group">
+      <label>Description:</label>
+      <input type="text" name="description" placeholder="Enter a description..." required />
+    </div>
+
+    <button type="submit" class="add-btn">Add</button>
+  </form>
+
+  <!-- TABLE -->
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Task</th>
+        <th>Description</th>
+        <th>Status</th>
+        <th>Date</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+
+    <tbody>
+
+      <!-- EMPTY STATE -->
+      {% if todos|length == 0 %}
+      <tr>
+        <td colspan="6">No tasks yet</td>
+      </tr>
+      {% endif %}
+
+      <!-- DATA LOOP -->
+      {% for todo in todos %}
+      <tr>
+        <td>{{ loop.index }}</td>
+        <td>{{ todo.task }}</td>
+        <td>{{ todo.description }}</td>
+
+        <td>
+          <span class="{% if todo.status == 'Done' %}done{% else %}pending{% endif %}">
+            {{ todo.status }}
+          </span>
+        </td>
+
+        <td>{{ todo.date_created }}</td>
+
+        <td>
+          <a href="/update/{{ todo.id }}" class="action-btn update-btn">Update</a>
+          <a href="/delete/{{ todo.id }}" class="action-btn delete-btn">Delete</a>
+        </td>
+      </tr>
+      {% endfor %}
+
+    </tbody>
+  </table>
+
+</div>
+
 </body>
 </html>
