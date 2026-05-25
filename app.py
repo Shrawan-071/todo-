@@ -5,98 +5,80 @@ import os
 
 app = Flask(__name__)
 
-# Database configuration
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 db_path = os.path.join(BASE_DIR, "todo.db")
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + db_path
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + db_path
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
 
 
 class Todo(db.Model):
-    __tablename__ = 'todo'
-
-    sno = db.Column(db.Integer, primary_key=True)
-    task = db.Column(db.String(150), nullable=False)
+    id = db.Column(db.Integer, primary_key=True)
+    task = db.Column(db.String(200), nullable=False)
     description = db.Column(db.String(500), nullable=False)
-    status = db.Column(db.String(100), nullable=False)
-    date_time = db.Column(db.DateTime, default=datetime.utcnow)
-
-    def __repr__(self):
-        return f"{self.task} {self.description} {self.status} {self.date_time}"
+    status = db.Column(db.String(100), default="Pending")
+    date_created = db.Column(db.DateTime, default=datetime.utcnow)
 
 
-@app.route("/", methods=['GET', 'POST'])
-def add_todo():
+@app.route("/", methods=["GET", "POST"])
+def home():
 
-    if request.method == 'POST':
+    if request.method == "POST":
 
-        task = request.form.get('task')
-        description = request.form.get('description')
-
-        status = "Pending"
+        task = request.form.get("task")
+        description = request.form.get("description")
 
         if task and description:
-            new_entry = Todo(
+
+            new_task = Todo(
                 task=task,
-                description=description,
-                status=status
+                description=description
             )
 
-            db.session.add(new_entry)
+            db.session.add(new_task)
             db.session.commit()
 
         return redirect("/")
 
-    showing = Todo.query.all()
+    todos = Todo.query.all()
 
-    return render_template("index.html", showing=showing)
-
-
-@app.route("/show")
-def displaying():
-
-    showing = Todo.query.all()
-
-    print(showing)
-
-    return "Data printed in console"
+    return render_template("index.html", todos=todos)
 
 
-@app.route("/delete/<int:sno>")
-def delete(sno):
+@app.route("/delete/<int:id>")
+def delete(id):
 
-    todo_to_delete = Todo.query.get_or_404(sno)
+    task = Todo.query.get_or_404(id)
 
-    db.session.delete(todo_to_delete)
+    db.session.delete(task)
     db.session.commit()
 
     return redirect("/")
 
 
-@app.route("/update/<int:sno>", methods=["GET", "POST"])
-def update(sno):
+@app.route("/update/<int:id>", methods=["GET", "POST"])
+def update(id):
 
-    todo_item = Todo.query.get_or_404(sno)
+    task = Todo.query.get_or_404(id)
 
     if request.method == "POST":
 
-        todo_item.task = request.form.get("task")
-        todo_item.description = request.form.get("description")
-        todo_item.status = request.form.get("status")
+        task.task = request.form.get("task")
+        task.description = request.form.get("description")
+        task.status = request.form.get("status")
 
         db.session.commit()
 
         return redirect("/")
 
-    return render_template("update.html", todo=todo_item)
+    return render_template("update.html", task=task)
 
 
 with app.app_context():
     db.create_all()
 
 
-# IMPORTANT FOR VERCEL
-app = app
+# IMPORTANT
+application = app
