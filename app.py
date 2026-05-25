@@ -5,8 +5,8 @@ import os
 
 app = Flask(__name__)
 
-base_dir = os.path.abspath(os.path.dirname(__file__))
-db_path = os.path.join(base_dir, "todo.db")
+# ---------------- VERCEL SAFE SQLITE ----------------
+db_path = "/tmp/todo.db"
 
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + db_path
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -21,30 +21,28 @@ class Todo(db.Model):
     status = db.Column(db.String(100), default="Pending")
     date_created = db.Column(db.DateTime, default=datetime.utcnow)
 
-# ---------------- HOME ----------------
+# ---------------- CREATE TABLES ----------------
+with app.app_context():
+    db.create_all()
+
+# ---------------- ROUTES ----------------
 @app.route("/", methods=["GET", "POST"])
 def home():
     if request.method == "POST":
-        print("POST REQUEST RECEIVED")  # DEBUG
-
         task = request.form.get("task")
         description = request.form.get("description")
-
-        print("TASK:", task)
-        print("DESC:", description)
 
         if task and description:
             new_task = Todo(task=task, description=description)
             db.session.add(new_task)
             db.session.commit()
-            print("SAVED TO DB")  # DEBUG
 
         return redirect("/")
 
-    todos = Todo.query.all()
+    todos = Todo.query.order_by(Todo.date_created.desc()).all()
     return render_template("index.html", todos=todos)
 
-# ---------------- DELETE ----------------
+
 @app.route("/delete/<int:id>")
 def delete(id):
     task = Todo.query.get_or_404(id)
@@ -52,7 +50,7 @@ def delete(id):
     db.session.commit()
     return redirect("/")
 
-# ---------------- UPDATE ----------------
+
 @app.route("/update/<int:id>", methods=["GET", "POST"])
 def update(id):
     task = Todo.query.get_or_404(id)
@@ -66,9 +64,6 @@ def update(id):
 
     return render_template("update.html", task=task)
 
-# ---------------- INIT DB ----------------
-with app.app_context():
-    db.create_all()
 
-if __name__ == "__main__":
-    app.run(debug=True)
+# ---------------- VERCEL ENTRY POINT ----------------
+application = app
